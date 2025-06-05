@@ -75,8 +75,12 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'empl_mang',
+        'USER': 'postgres',
+        'PASSWORD': 'sa123456',
+        'HOST': 'localhost',
+        'PORT': '5432',  # default PostgreSQL port
     }
 }
 
@@ -111,6 +115,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+LOGIN_URL = 'login'
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -121,3 +127,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHENTICATION_BACKENDS = [
+    'employees.backend.EmailBackend',  # your app name here
+    'django.contrib.auth.backends.ModelBackend',  # fallback to default
+]
+
+
+
+
