@@ -1,51 +1,42 @@
 from django.shortcuts import render ,redirect,get_object_or_404
 from .models import Employee 
-from .forms import EmployeeForm,CustomUserForm
-from django.contrib.auth import login
+from .forms import EmployeeForm
 # from django.contrib.auth.decorators import login_required
 from django.contrib import auth
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
+from django.contrib.auth import login
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 # Create your views here.
 
-from django.contrib.auth import authenticate, login, get_user_model
 
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('home')
 
+    form = AuthenticationForm()
     if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-
-        # Note: pass email as 'username' param
-        user = auth.authenticate(request, username=email, password=password)
-
-        if user is not None:
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
             login(request, user)
             return redirect('home')
-        else:
-            messages.error(request, 'Invalid email or password')
-            return redirect('login')
 
-    return render(request, 'employees/login.html')
+    return render(request, 'employees/login.html', {'form': form})
 
 
 def signup(request):
     if request.user.is_authenticated:
         return redirect('home')
-    
+
+    form = UserCreationForm()
     if request.method == 'POST':
-        form = CustomUserForm(request.POST)
+        form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
             return redirect('home')
-    else:
-        form = CustomUserForm()
-        print(form.errors)
-    
+
     return render(request, 'employees/register.html', {'form': form})
 
 
