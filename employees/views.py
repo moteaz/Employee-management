@@ -7,6 +7,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.db.models import Q
+
 # Create your views here.
 
 
@@ -54,15 +56,45 @@ def home(request):
     active_employees = Employee.objects.filter(status='active').count()
     inactive_employees = Employee.objects.filter(status='inactive').count()
     on_leave_employees = Employee.objects.filter(status='on_leave').count()
-    employees = Employee.objects.all().order_by('last_name', 'first_name')
+
+    departments = Employee.objects.values_list('job_title', flat=True).distinct()
+    selected_dept = request.GET.get('department')
+    selected_status = request.GET.get('status')
+    search_query = request.GET.get('employee')
+
+    employees = Employee.objects.all()
+
+    if selected_dept:
+        employees = employees.filter(job_title=selected_dept)
+    if selected_status:
+        employees = employees.filter(status=selected_status)
+
+    if search_query:
+        if len(search_query) == 1:
+            # If user enters 1 character: search first name that starts with it
+            employees = employees.filter(first_name__istartswith=search_query)
+        employees = employees.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+
+
+    employees = employees.order_by('last_name', 'first_name')
+    total_search_results = employees.count()
+
     context = {
         'total_employees': total_employees,
         'active_employees': active_employees,
         'inactive_employees': inactive_employees,
         'on_leave_employees': on_leave_employees,
         'employees': employees,
+        'departments': departments,
+        "total_search_results": total_search_results,
+
     }
     return render(request, 'employees/home.html', context)
+
+
 
 
 @login_required(login_url='login')
